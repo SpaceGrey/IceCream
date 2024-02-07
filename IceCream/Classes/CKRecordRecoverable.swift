@@ -24,7 +24,6 @@ extension CKRecordRecoverable where Self: Object {
         let o = Self()
         for prop in o.objectSchema.properties {
             var recordValue: Any?
-            
             if prop.isArray {
                 switch prop.type {
                 case .int:
@@ -64,11 +63,9 @@ extension CKRecordRecoverable where Self: Object {
                     recordValue = list
                 case .object:
                     guard let value = record.value(forKey: prop.name) as? [CKRecord.Reference] else { break }
-                    
                     let uList = List<U>()
                     let vList = List<V>()
                     let wList = List<W>()
-                    
                     for reference in value {
                         if let objectClassName = prop.objectClassName,
                            let schema = realm.schema.objectSchema.first(where: { $0.className == objectClassName }),

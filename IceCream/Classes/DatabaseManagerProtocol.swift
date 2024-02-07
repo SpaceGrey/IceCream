@@ -81,6 +81,7 @@ extension DatabaseManager {
         NotificationCenter.default.addObserver(forName: Notifications.cloudKitDataDidChangeRemotely.name, object: nil, queue: nil, using: { [weak self](_) in
             guard let self = self else { return }
             DispatchQueue.global(qos: .utility).async {
+                print("changes in CloudKit, fetch now...")
                 self.fetchChangesInDatabase(nil)
             }
         })

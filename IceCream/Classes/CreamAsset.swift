@@ -19,6 +19,8 @@ import CloudKit
 /// So this is the deal.
 public class CreamAsset: Object {
     @Persisted private var uniqueFileName = ""
+    public static var groupURL:URL = .init(fileURLWithPath: "/")
+    var groupURL:URL!
     override public static func ignoredProperties() -> [String] {
         return ["filePath"]
     }
@@ -35,7 +37,7 @@ public class CreamAsset: Object {
 
     /// Where the asset locates in the file system
     public var filePath: URL {
-        return CreamAsset.creamAssetDefaultURL().appendingPathComponent(uniqueFileName)
+        return CreamAsset.groupURL.appendingPathComponent(uniqueFileName)
     }
 
     /// Save the given data to local file system
@@ -44,7 +46,7 @@ public class CreamAsset: Object {
     ///   - path:
     ///   - shouldOverwrite: Whether should overwrite current file existed at path or not.
     private static func save(data: Data, to path: String, shouldOverwrite: Bool) throws {
-        let url = CreamAsset.creamAssetDefaultURL().appendingPathComponent(path)
+        let url = CreamAsset.groupURL.appendingPathComponent(path)
         guard shouldOverwrite || !FileManager.default.fileExists(atPath: url.path) else { return }
         try data.write(to: url)
     }
@@ -146,7 +148,10 @@ public class CreamAsset: Object {
             do {
                 try FileManager.default.copyItem(at: url, to: creamAsset.filePath)
             } catch {
-                /// Os.log copy item failed
+                print("""
+                    Failed to copy file to \(creamAsset.filePath)
+                    Error: \(error)
+                    """)
                 return nil
             }
         }
@@ -157,23 +162,23 @@ public class CreamAsset: Object {
 extension CreamAsset {
     /// The default path for the storing of CreamAsset. That is:
     /// xxx/Document/CreamAsset/
-    public static func creamAssetDefaultURL() -> URL {
-        let documentDir = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
-        let commonAssetPath = documentDir.appendingPathComponent(className())
-        if !FileManager.default.fileExists(atPath: commonAssetPath.path) {
-            do {
-                try FileManager.default.createDirectory(atPath: commonAssetPath.path, withIntermediateDirectories: false, attributes: nil)
-            } catch {
-                /// Log: create directory failed
-            }
-        }
-        return commonAssetPath
-    }
+//    public static func creamAssetDefaultURL() -> URL {
+//        let documentDir = try! FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: false)
+//        let commonAssetPath = documentDir.appendingPathComponent(className())
+//        if !FileManager.default.fileExists(atPath: commonAssetPath.path) {
+//            do {
+//                try FileManager.default.createDirectory(atPath: commonAssetPath.path, withIntermediateDirectories: false, attributes: nil)
+//            } catch {
+//                /// Log: create directory failed
+//            }
+//        }
+//        return commonAssetPath
+//    }
 
     /// Fetch all CreamAsset files' path
     public static func creamAssetFilesPaths() -> [String] {
         do {
-            return try FileManager.default.contentsOfDirectory(atPath: CreamAsset.creamAssetDefaultURL().path)
+            return try FileManager.default.contentsOfDirectory(atPath: CreamAsset.groupURL.path)
         } catch {
             
         }
@@ -183,7 +188,7 @@ extension CreamAsset {
     /// Execute deletions
     private static func excecuteDeletions(in filesNames: [String]) {
         for fileName in filesNames {
-            let absolutePath = CreamAsset.creamAssetDefaultURL().appendingPathComponent(fileName).path
+            let absolutePath = CreamAsset.groupURL.appendingPathComponent(fileName).path
             do {
                 try FileManager.default.removeItem(atPath: absolutePath)
             } catch {
